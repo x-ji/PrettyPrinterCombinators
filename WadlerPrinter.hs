@@ -19,14 +19,22 @@ data Doc = Nil
          | String `Text` Doc
          | Int `Line` Doc
 
+nil :: DOC
 nil = NIL
+
+(<>) :: DOC -> DOC -> DOC
 x <> y = x :<> y
 -- nest i x = NEST i x
+nest :: Int -> DOC -> DOC
 nest = NEST
 -- text s = TEXT s
+text :: String -> DOC
 text = TEXT
+
+line :: DOC
 line = LINE
 
+group :: DOC -> DOC
 group x = flatten x :<|> x
 
 flatten :: DOC -> DOC
@@ -42,6 +50,7 @@ flatten LINE = TEXT " "
 -- If x and y can be unioned they're the same thing. Just flatten one of them is enough.
 flatten (x :<|> y) = flatten x
 
+layout :: Doc -> String
 layout Nil = ""
 
 -- `s` is already a string. No need to do extra operation on it. Just concatenate the result of `layout x`
@@ -49,14 +58,17 @@ layout (s `Text` x) = s ++ layout x
 -- This is the typical operation of doing layout of an indented new line.
 layout (i `Line` x) = '\n' : copy i ' ' ++ layout x
 
+copy :: Int -> Char -> String
 copy i x = [x | _ <- [1..i] ]
 
 -- Automatically choose the best layout according to width and previous number of chars.
 -- We convert the document fed to us to a starting list of 0 indentation and the document itself
+best :: Int -> Int -> DOC -> Doc
 best w k x = be w k [(0,x)]
 
 -- This function acts on a list indentation-document pairs.
 -- The point of a "list" is to produce a single `document` by using `fold` on the list.
+be :: Int -> Int -> [(Int, DOC)] -> Doc
 be w k [] = Nil
 -- If this element of the list has a NIL document then of course we just ignore it and continue to deal with the next element in the list.
 be w k ((i,NIL):z) = be w k z
@@ -69,9 +81,11 @@ be w k ((i, TEXT s):z) = s `Text` be w (k + length s) z
 -- If this element is actually a union of two documents, we'll just try to apply `be` to both of the unioned documents and see which result is "better".
 be w k ((i, x :<|> y):z) = better w k (be w k ((i,x):z)) (be w k ((i,y):z))
 
+better :: Int -> Int -> Doc -> Doc -> Doc
 -- depends on the length of the first document here.
 better w k x y = if fits (w-k) x then x else y
 
+fits :: Int -> Doc -> Bool
 -- Seems to be a guard here.
 fits w x | w < 0 = False
 -- Starts pattern matching on the data type.
@@ -81,6 +95,7 @@ fits w (s `Text` x) = fits (w - length s) x
 -- If it's constructor Line then of course no problem since it won't add any width.
 fits w (i `Line` x) = True
 
+pretty :: Int -> DOC -> String
 pretty w x = layout (best w 0 x)
 
 -- Finish major parts of the printer.
