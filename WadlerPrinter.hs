@@ -6,7 +6,6 @@ infixr 5 :<|>
 infixr 6 :<>
 infixr 6 <>
 
--- This is the version defined for efficiency.
 data DOC = NIL
          | DOC :<> DOC
          | NEST Int DOC
@@ -14,7 +13,6 @@ data DOC = NIL
          | LINE
          | DOC :<|> DOC
 
--- This is the crude version
 data Doc = Nil
          | String `Text` Doc
          | Int `Line` Doc
@@ -52,7 +50,6 @@ flatten (x :<|> y) = flatten x
 
 layout :: Doc -> String
 layout Nil = ""
-
 -- `s` is already a string. No need to do extra operation on it. Just concatenate the result of `layout x`
 layout (s `Text` x) = s ++ layout x
 -- This is the typical operation of doing layout of an indented new line.
@@ -78,6 +75,7 @@ be w k (( i,x :<> y) : z ) = be w k ((i, x): (i, y) : z)
 be w k ((i, NEST j x) : z) = be w k ((i+j, x) : z)
 -- We know that the `document` formed from `s` will take `length s` characters, so we add it to the argument k
 be w k ((i, TEXT s):z) = s `Text` be w (k + length s) z
+be w k ((i, LINE):z) = i `Line` be w i z
 -- If this element is actually a union of two documents, we'll just try to apply `be` to both of the unioned documents and see which result is "better".
 be w k ((i, x :<|> y):z) = better w k (be w k ((i,x):z)) (be w k ((i,y):z))
 
@@ -135,24 +133,31 @@ fill (x:y:zs) = (flatten x <+> fill (flatten y : zs))
 
 data Tree = Node String [Tree]
 
+showTree :: Tree -> DOC
 showTree (Node s ts) = group (text s <> nest (length s) (showBracket ts))
 
+showBracket :: [Tree] -> DOC
 showBracket [] = nil
 showBracket ts = text "[" <> nest 1 (showTrees ts) <> text "]"
 
+showTrees :: [Tree] -> DOC
 showTrees [t] = showTree t
 showTrees (t:ts) = showTree t <> text "," <> line <> showTrees ts
 
+showTree' :: Tree -> DOC
 showTree' (Node s ts) = text s <> showBracket' ts
 
 -- This version doesn't put new lines
+showBracket' :: [Tree] -> DOC
 showBracket' [] = nil
 showBracket' ts = bracket "[" (showTrees' ts) "]"
 
 -- There seemed to be a mistake in the original document? Should be a ' here?
+showTrees' :: [Tree] -> DOC
 showTrees' [t] = showTree' t
 showTrees' (t:ts) = showTree' t <> text "," <> line <> showTrees' ts
 
+tree :: Tree
 tree = Node "aaa" [
          Node "bbbbb" [
            Node "ccc" [],
@@ -166,7 +171,9 @@ tree = Node "aaa" [
          ]
        ]
 
+testtree :: Int -> IO()
 testtree w = putStr (pretty w (showTree tree))
+testtree' :: Int -> IO()
 testtree' w = putStr (pretty w (showTree' tree))
 
 -- XML example
@@ -181,7 +188,7 @@ showXMLs (Elt n a []) = [text "<" <> showTag n a <> text "/>"]
 showXMLs (Elt n a c) = [text "<" <> showTag n a <> text ">" <>
                         showFill showXMLs c <>
                         text "</" <> text n <> text ">"]
-showXmls (Txt s) = map text (words s)
+showXMLs (Txt s) = map text (words s)
 
 showAtts (Att n v) = [text n <> text "=" <> text (quoted v)]
 
