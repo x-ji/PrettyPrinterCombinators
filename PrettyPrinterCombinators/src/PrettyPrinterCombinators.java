@@ -1,5 +1,6 @@
 import java.lang.IndexOutOfBoundsException;
 import java.lang.StringBuilder;
+import java.lang.reflect.Array;
 import java.util.*;
 
 
@@ -186,6 +187,8 @@ class CONCAT1 implements DOC1 {
     // I think we won't get out of bounds exception in this one because we'll break this CONCAT1 element into two element and put them back to the list.
     l.add(0, new Pair<Integer, DOC1>(l.get(0).fst, left));
     l.add(1, new Pair<Integer, DOC1>(l.get(0).fst, right));
+    // However we'll have to remember to remove the original element
+    l.remove(2);
     return left.be(w, k, l);
   }
 }
@@ -259,7 +262,7 @@ class LINE1 implements DOC1 {
 
     // The first element in this list (this "LINE1") is to be ditched. So if after removing this one we get out of bounds then it means there's only one element and we can return Nil2.
     try {
-      return new Line2(l.get(0).fst, l.get(1).snd.be(w, l.get(0).fst, (ArrayList<Pair<Integer, DOC1>>) l.subList(1, l.size() - 1)));
+      return new Line2(l.get(0).fst, l.get(1).snd.be(w, l.get(0).fst, new ArrayList<Pair<Integer, DOC1>>(l.subList(1, l.size() - 1))));
     } catch (IndexOutOfBoundsException e) {
       // Means there was only one element in the list.
       return new Line2(l.get(0).fst, new Nil2());
@@ -296,9 +299,10 @@ class UNION1 implements DOC1 {
   }
 }
 
+
 // Try to test it using Tree
 interface Tree {
-  DOC1 showTree(Tree t);
+  DOC1 showTree();
 
   DOC1 showBracket(ArrayList<Tree> ts);
 
@@ -310,11 +314,11 @@ class Node implements Tree {
   ArrayList<Tree> ts;
 
   public Node(String s, ArrayList<Tree> ts) {
-    s = s;
-    ts = ts;
+    this.s = s;
+    this.ts = ts;
   }
 
-  public DOC1 showTree(Tree t) {
+  public DOC1 showTree() {
 //      DOC1 d = new TEXT1(s);
     return DOC1.group(new CONCAT1(new TEXT1(s), new NEST1(s.length(), showBracket(ts))));
   }
@@ -329,28 +333,71 @@ class Node implements Tree {
 
   public DOC1 showTrees(ArrayList<Tree> ts) {
     if (ts.size() == 1) {
-      return showTree(ts.get(0));
+      return ts.get(0).showTree();
     }
 
-    return new CONCAT1(new CONCAT1(new CONCAT1(showTree(ts.get(0)), new TEXT1(",")), new LINE1()), showTrees((ArrayList<Tree>) ts.subList(1, ts.size() - 1)));
+    return new CONCAT1(new CONCAT1(new CONCAT1(ts.get(0).showTree(), new TEXT1(",")), new LINE1()), showTrees(new ArrayList<Tree>(ts.subList(1, ts.size() - 1))));
   }
 }
 
 public class PrettyPrinterCombinators {
+  static void testTree(int w, Tree t) {
+    DOC1.pretty(w, (t.showTree()));
+  }
 
   public static void main(String[] args) {
     TEXT1 t = new TEXT1("aaa");
-    System.out.println(DOC1.pretty(1, t));
+    System.out.println(DOC1.pretty(10, t));
 
-    LINE1 l = new LINE1();
-    System.out.println(DOC1.pretty(1, l));
+    LINE1 li = new LINE1();
+    System.out.println(DOC1.pretty(10, li));
 
     NEST1 n = new NEST1(4, t);
-    System.out.println(DOC1.pretty(3, n));
+    System.out.println(DOC1.pretty(30, n));
 
-    CONCAT1 c = new CONCAT1(t, l);
-    System.out.println(DOC1.pretty(3, c));
-//    System.out.println(DOC1.pretty(3, new CONCAT1(t, n)));
+    CONCAT1 c = new CONCAT1(t, li);
+    System.out.println(DOC1.pretty(30, c));
+    System.out.println(DOC1.pretty(30, new CONCAT1(t, n)));
+
+    System.out.println(DOC1.pretty(30, new CONCAT1(new CONCAT1(new CONCAT1(new TEXT1("["), new NEST1(2, new CONCAT1(new LINE1(), new TEXT1("insideOfBracket")))), new LINE1()), new TEXT1("]"))));
+
+    System.out.println(DOC1.pretty(30, new CONCAT1(new CONCAT1(new TEXT1("we're trying to print"), new LINE1()), new TEXT1("after a line, but it's not working"))));
+
+
+    // Not working
+//    Tree t11 = new Node ("ccc", new ArrayList<Tree>());
+//    Tree t12 = new Node ("dd", new ArrayList<Tree>());
+//    ArrayList<Tree> l1 = new ArrayList<Tree>();
+//    l1.add(t11);
+//    l1.add(t12);
+//
+//    Tree t1 = new Node ("bbbbb", l1);
+//
+//    Tree t2 = new Node ("eee", new ArrayList<Tree>());
+//
+//    Tree t31 = new Node ("gg", new ArrayList<Tree>());
+//    Tree t32 = new Node ("hhh", new ArrayList<Tree>());
+//    Tree t33 = new Node ("ii", new ArrayList<Tree>());
+//    ArrayList<Tree> l3 = new ArrayList<Tree>();
+//    l3.add(t31);
+//    l3.add(t32);
+//    l3.add(t33);
+//
+//    Tree t3 = new Node ("ffff", l3);
+//
+//    ArrayList<Tree> l = new ArrayList<Tree>();
+//    l.add(t1);
+//    l.add(t2);
+//    l.add(t3);
+//
+//    Tree tr = new Node("aaa", l);
+//
+////    testTree(30, tr);
+//
+//    Tree tr2 = new Node("bbb", new ArrayList<Tree>());
+//
+//    testTree(30, tr2);
+
   }
 }
 
