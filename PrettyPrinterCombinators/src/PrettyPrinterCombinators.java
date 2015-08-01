@@ -300,51 +300,8 @@ class UNION1 implements DOC1 {
 }
 
 
-// Try to test it using Tree
-interface Tree {
-  DOC1 showTree();
-
-  DOC1 showBracket(ArrayList<Tree> ts);
-
-  DOC1 showTrees(ArrayList<Tree> ts);
-}
-
-class Node implements Tree {
-  String s;
-  ArrayList<Tree> ts;
-
-  public Node(String s, ArrayList<Tree> ts) {
-    this.s = s;
-    this.ts = ts;
-  }
-
-  public DOC1 showTree() {
-//      DOC1 d = new TEXT1(s);
-    return DOC1.group(new CONCAT1(new TEXT1(s), new NEST1(s.length(), showBracket(ts))));
-  }
-
-  public DOC1 showBracket(ArrayList<Tree> ts) {
-    if (ts.isEmpty()) {
-      return new Nil1();
-    }
-
-    return new CONCAT1(new CONCAT1(new TEXT1("["), new NEST1(1, showTrees(ts))), new TEXT1("]"));
-  }
-
-  public DOC1 showTrees(ArrayList<Tree> ts) {
-    if (ts.size() == 1) {
-      return ts.get(0).showTree();
-    }
-
-    return new CONCAT1(new CONCAT1(new CONCAT1(ts.get(0).showTree(), new TEXT1(",")), new LINE1()), showTrees(new ArrayList<Tree>(ts.subList(1, ts.size() - 1))));
-  }
-}
 
 public class PrettyPrinterCombinators {
-  static void testTree(int w, Tree t) {
-    DOC1.pretty(w, (t.showTree()));
-  }
-
   public static void main(String[] args) {
     TEXT1 t = new TEXT1("aaa");
     System.out.println(DOC1.pretty(10, t));
@@ -361,10 +318,10 @@ public class PrettyPrinterCombinators {
 
     System.out.println(DOC1.pretty(30, new CONCAT1(new CONCAT1(new CONCAT1(new TEXT1("["), new NEST1(2, new CONCAT1(new LINE1(), new TEXT1("insideOfBracket")))), new LINE1()), new TEXT1("]"))));
 
-    System.out.println(DOC1.pretty(30, new CONCAT1(new CONCAT1(new TEXT1("we're trying to print"), new LINE1()), new TEXT1("after a line, but it's not working"))));
+    System.out.println(DOC1.pretty(30, new CONCAT1(new CONCAT1(new TEXT1("we're trying to print"), new LINE1()), new TEXT1("after a line"))));
 
 
-    // Not working
+    // Some bugs
 //    Tree t11 = new Node ("ccc", new ArrayList<Tree>());
 //    Tree t12 = new Node ("dd", new ArrayList<Tree>());
 //    ArrayList<Tree> l1 = new ArrayList<Tree>();
@@ -401,3 +358,42 @@ public class PrettyPrinterCombinators {
   }
 }
 
+// Some bugs with it. Not using it to test the code yet.
+//interface Tree {
+//  DOC1 showTree();
+//
+//  DOC1 showBracket(ArrayList<Tree> ts);
+//
+//  DOC1 showTrees(ArrayList<Tree> ts);
+//}
+//
+//class Node implements Tree {
+//  String s;
+//  ArrayList<Tree> ts;
+//
+//  public Node(String s, ArrayList<Tree> ts) {
+//    this.s = s;
+//    this.ts = ts;
+//  }
+//
+//  public DOC1 showTree() {
+////      DOC1 d = new TEXT1(s);
+//    return DOC1.group(new CONCAT1(new TEXT1(s), new NEST1(s.length(), showBracket(ts))));
+//  }
+//
+//  public DOC1 showBracket(ArrayList<Tree> ts) {
+//    if (ts.isEmpty()) {
+//      return new Nil1();
+//    }
+//
+//    return new CONCAT1(new CONCAT1(new TEXT1("["), new NEST1(1, showTrees(ts))), new TEXT1("]"));
+//  }
+//
+//  public DOC1 showTrees(ArrayList<Tree> ts) {
+//    if (ts.size() == 1) {
+//      return ts.get(0).showTree();
+//    }
+//
+//    return new CONCAT1(new CONCAT1(new CONCAT1(ts.get(0).showTree(), new TEXT1(",")), new LINE1()), showTrees(new ArrayList<Tree>(ts.subList(1, ts.size() - 1))));
+//  }
+//}
